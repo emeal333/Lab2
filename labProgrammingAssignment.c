@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
     }
     }
    
-    printf("Shell terminated. Goodbye!\n");
+    printf("Goodbye!\n");
     return 0;
 }
     
