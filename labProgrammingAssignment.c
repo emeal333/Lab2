@@ -1,122 +1,78 @@
-// Bekah Doody & Liz Mealing
-// Lab 2 - 9.10.25
-
-/* The Below is from sampleProgram4
+//Bekah Doody & Liz Mealing
+/*
+ * Write a parent program that:
+ *      Spawns off a child process
+ *      Installs signal handler(s) for the two user-defined signals (SIGUSR1/SIGUSR2)
+ *      When a user-defined signal is recieved, it reports the type of signal sent
+ *          note* It may be necessary to reinstall your signal handler after a signal is recieved
+ *      Terminated gracefully upon recieving a Control - C
  *
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <stdlib.h>
-int main(int argc, char* argv[])
-{
- if (argc < 3) {
- fputs("Usage: must supply a command\n", stderr);
- exit(1);
- }
- puts("Before the exec");
- if (execvp(argv[1], &argv[1]) < 0) {
- perror("exec failed");
- exit(1);
- }
- puts("After the exec");
- return 0;
-}
-*
-*/
+ *  The child process should repeatedly:
+ *      Wait a random amount of time (1-5 seconds)
+ *      Randomly send one of the two user-defined signals to its parent
+ */
 
 #include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
-#include <sys/resource.h>
-#include <sys/wait.h>
+#include <signal.h>
 
+void SIGUSR1 (int);
+void SIGUSR2 (int);
 
-int main(int argc, char* argv[])
+int main()
 {
-    // Repeat until user enters quit
-    while (1) {
-
-    //Display a prompt to the user
-    char command[256];
-    printf("Enter a command: ");
-
-
-    //Recieve and parse the user input
-    //REad a line into a character array (preferably using fgets())
-    if (fgets(command, sizeof(command), stdin) == NULL){
-        printf("\n");
-        break;
-    }
-
-    command[strcspn(command, "\n")] = 0; //removes \n char
-
-    //Repeat until user enters quit
-    if (strcmp(command, "quit") == 0) {
-        break;
-    }
-
-    //Depending on your implementation:
-    //  You can tokenize the line using your own custom function or by using strtok()
-    //      word_1 = strtok (line, " ");
-    //      word_2 = strtok (NULL, " ");
-    //  or by using strsep()
-    //      word_1 = strsep (&lineptr, " ");
-    //      word_2 = strsep (& lineptr, " ");
-    //
-    
-    char *token;
-    char *args[64];
-    int i =0;
-
-    token = strtok(command, " \t\n");
-    while (token != NULL && i < 63) {
-        // printf("%s\n", token);
-        args[i++] = token;
-        token = strtok(NULL, " \t\n");
-    }
-    args[i] = NULL;
-
-    //Spawn a child process to execute the command
-    pid_t pid;
+    //spawn off a child process
+    int pid;
     pid = fork();
 
-    //  preferably use execvp() / execve() as in Sample Program 4 of this lab. Note: you must create and pass a vector of pointers to arguments
-    //  or use execlp() / execle() as in the example call below. Note: in this case you must pass a fixed list of arguments.
-    //      execlp ("prog_name", "prog_name", ARG, (char *) 0);
-    if (pid < 0) {
-        perror("fork failed");
-        return 1;
-    } else if (pid == 0 ) {
-        //child process
-        // create and pass a vector of pointers to arguments
-        execvp(args[0], args);
-        perror("exec failed");
+    if(pid < 0)
+    {
+        perror("Fork failed");
         exit(1);
-    } else {
-        // parent process
-        int status;
-        struct rusage usage;
-
-        if (wait4(pid, &status, 0, &usage) == -1){
-            perror("wait4 failed");
-            continue;
-        }
-
-        printf("\n .......Process Statistics........\n");
-        printf("User CPU time userd: %ld.%06ld seconds\n", usage.ru_utime.tv_sec, usage.ru_utime.tv_usec);
-        printf("Involuntary context switches: %ld\n", usage.ru_nivcsw);
-        printf("...................................\n\n");
     }
+    else if(pid==0)
+    {
+        //child
+
+        //generates a random number - %5 gives num between 0 & 4, +1 is 0 & 5
+        int randomNumber = (rand() %5) +1;        
+
+        //random number for signal selection
+        int randomNumber2 = (rand() %2);
+        char signals[2][50] = {"SIGUSR1", "SIGUSR2"};
+        
+        signal (!!!!!!!SIGNAL TYPE!!!!!!!,signals[randomNumber2]);
+        
+        sleep(randomNumber);
+
+
     }
-   
-    printf("Goodbye!\n");
+    else
+    {
+        //parent
+    }
     return 0;
 }
+
+void SIGUSR1 (int sig){ 
+    printf("recieved a SIGUSR1 signal.\n");
     
-    // Find and use the appropriate system call to collect resource usage statistics about each executed process
-        // Output the "user CPU time used" for each individual child process spawned by the shell
-        // Output the number of "involuntary context switches" experienced by each individual child process spawned by the shell
-    // Repeat until the user enters "quit" 
-    
+
+}
+
+void SIGUSR2 (int sig){ 
+    printf("recieved a SIGUSR2 signal.\n");
+
+
+}
+
+void SIGINT (int sigNum){
+    printf("^C recieved. That's it. I'm shutting you down...");
+    exit(0);
+}
+
+
+
+
