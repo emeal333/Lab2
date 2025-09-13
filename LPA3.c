@@ -19,7 +19,7 @@ int main() {
     srand(time(NULL));
 	pid_t pid;
     
-    signal (SIGINT, sigHandler3);
+  //  signal (SIGINT, sigHandler3);
 
 	if (signal(SIGUSR1, sigHandler1) == SIG_ERR) {
 		perror("signal SIGUSR2");
@@ -39,6 +39,7 @@ int main() {
 
 	} else if (pid == 0) {
         	//child
+        signal(SIGINT, SIG_IGN);    
 
         	//generates a random number - %5 gives num between 0 & 4, +1 is 0 & 5
         	int randomNumber = (rand() %5) +1;
@@ -60,7 +61,8 @@ int main() {
 
 		exit(0);
 	} else {
-		printf("parent waiting...\n");
+		signal(SIGINT, sigHandler3);
+        printf("parent waiting...\n");
 		pause();
 		wait(NULL);
 		printf("child exited\n");
