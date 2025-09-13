@@ -12,22 +12,24 @@ void interruptSigHandler (int);
 struct Apple {
     int intendedNode;
     char message[100];
-}
+};
 
 int main() {
 
-    int iterator = 0;
+    struct Apple messenger;
     
     //Receiving user input
-    int recipient;
-    printf("Enter recipient node (int): \n");
-    fgets(recipient, sizeof(recipient), stdin);
+    printf("Enter recipient node (int): ");
+    scanf("%d", &messenger.intendedNode);
     
-    char message[500];
-    printf("Enter message (string): \n");
-    fgets(message, sizeof(message), stdin);
-    //
+    while (getchar() != '\n' && getchar() != EOF);
 
+    printf("Enter message (string): ");
+    fgets(messenger.message, sizeof(messenger.message), stdin);
+//
+
+    printf("Message: %s\n", messenger.message);
+    printf("Intended Node: %d\n", messenger.intendedNode);
 
 
     if(signal(SIGINT, interruptSigHandler) == SIG_ERR) {
