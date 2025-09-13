@@ -6,6 +6,8 @@
 #include <sys/wait.h>
 #include <signal.h>
 
+#define k 5
+
 void interruptSigHandler (int);
 
 
@@ -17,51 +19,73 @@ struct Apple {
 int main() {
 
     struct Apple messenger;
-
-
+    
     //Receiving user input
-    int k;
-    printf("Enter number of nodes (int): ");
-    scanf("%d", &k);
-
-    //Validation for k
-    if (k <= 0){
-        printf("Error: Number of nodes must be positive.\n");
-        exit(1);
-    }
-
-    while(getchar() != '\n' && getchar() != EOF);
-
     printf("Enter recipient node (int): ");
     scanf("%d", &messenger.intendedNode);
-
-    if (messenger.intendedNode < 0 || messenger.intendedNode > k){
-        printf("Error: Recipient Node must be between 0 & %d\n", k);
-        exit(1);
-    }
     
     while (getchar() != '\n' && getchar() != EOF);
 
     printf("Enter message (string): ");
     fgets(messenger.message, sizeof(messenger.message), stdin);
-    char *newline = strchr(messenger.message, '\n');
-    if (newline) {
-        *newline = '\0';
-    }
 //
-    
-    //TESTING PRINTS REMEMBER TO REMOVE
+
     printf("Message: %s\n", messenger.message);
     printf("Intended Node: %d\n", messenger.intendedNode);
 
-    
-    
 
     if(signal(SIGINT, interruptSigHandler) == SIG_ERR) {
         perror("signal");
         exit(1);
     }
 
+    int pipes[k][2];
+    for (int i = 0; i < k; i++) {
+	    if (pipe(pipes[i]) == -1) {
+		    perror("pipe failure");
+		    exit(1);
+	    }
+    }
+
+    for (int i = 0; i < k; i++) {
+	    pid_t pid = fork();
+
+	    if (pid < 0) {
+		    perror("fork failure");
+	            exit(1)
+	    }
+
+	    if (pid == 0) {
+		    int id = i;
+		    int prev = (id - 1 + k) % k; //chatgpt
+		    int next = id;
+
+		    strucy Apple apple;
+
+		    read(pipes[prev][0], &apple, sizeof(apple));
+
+		    if (apple.intendedNode == id) {
+			    printf("node PID%d received message %s\n", id, apple.message);
+			    apple.intendedNode = -1; //node set to empty
+			    strcpy(apple.message, "empty");
+		    }
+
+		    write(pipes[next][1], &apple, sizeof(apple));
+
+		    ext(0);
+	    }
+    }
+
+    write(pipes[0][1], &messenger, sizeof(messenger));
+
+    for (int i = 0; i < k; i++) {
+	    wait(NULL);
+    }
+
+    void interruptSigHandler (int sigNum) {
+	    printf( "received. Shutting down...\n");                            exit(0);
+    }
+	
 
 
     return 0;
@@ -70,6 +94,7 @@ int main() {
 
 void
 interruptSigHandler (int sigNum){
+    pinterruptSigHandler (int sigNum){
     printf( "received. Shutting down...\n");
     exit(0);
 }
