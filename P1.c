@@ -40,7 +40,6 @@ int main() {
     }
     while(getchar() != '\n' && getchar() != EOF);
 
-    /*
     printf("Enter recipient node (int): ");
     scanf("%d", &apple.intendedNode);
 
@@ -48,7 +47,7 @@ int main() {
         printf("Error: Recipient Node must be between 0 & %d\n", k);
         exit(1);
     }
-    
+
     while (getchar() != '\n' && getchar() != EOF);
 
     printf("Enter message (string): ");
@@ -57,7 +56,7 @@ int main() {
     if (newline) {
         *newline = '\0';
     }
-*/
+
 
     //**************************************************
     //              PIPING  & FORKING
@@ -96,28 +95,10 @@ int main() {
 		    write(pipes[next][1], &apple, sizeof(apple));
 
 		    exit(0);
-	    }
-        else {
-        // parent
-            printf("Enter recipient node (int): ");
-            scanf("%d", &apple.intendedNode);
+	    }   
+        
 
-            if (apple.intendedNode < 0 || apple.intendedNode > k){
-                printf("Error: Recipient Node must be between 0 & %d\n", k);
-                exit(1);
-            }
-    
-            while (getchar() != '\n' && getchar() != EOF);
-
-            printf("Enter message (string): ");
-            fgets(apple.message, sizeof(apple.message), stdin);
-            char *newline = strchr(apple.message, '\n');
-            if (newline) {
-                *newline = '\0';
-            }
-
-
-        }
+        
 
     }
 
