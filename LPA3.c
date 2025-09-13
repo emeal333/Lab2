@@ -10,14 +10,17 @@
 
 void sigHandler1 (int);
 void sigHandler2 (int);
+void sigHandler3 (int);
 
 int main() {
     // different sequence of random numbers each time
+//    signal(SIGINT, sigHandler3);
     while(1){
     srand(time(NULL));
 	pid_t pid;
     
-    
+    signal (SIGINT, sigHandler3);
+
 	if (signal(SIGUSR1, sigHandler1) == SIG_ERR) {
 		perror("signal SIGUSR2");
 		exit(1);
@@ -79,3 +82,10 @@ void
 sigHandler2 (int sigNum) {
 	printf("parent received sigusr2 %d\n", sigNum);
 }
+
+void
+sigHandler3 (int sigNum){
+    printf(" received. Shutting down...\n");
+    exit(0);
+}
+
