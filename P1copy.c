@@ -124,7 +124,7 @@ int main() {
 
 void
 interruptSigHandler (int sigNum){
-    printf( "received. Shutting down...\n");
+    printf( " received. Shutting down...\n");
     exit(0);
 }
 
