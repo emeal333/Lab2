@@ -40,19 +40,6 @@ int main() {
     }
 
     //**************************************************
-    //                PIPING  
-    //*************************************************
-
-
-    int pipes[k][2];
-    for (int i = 0; i < k; i++) {
-            if (pipe(pipes[i]) == -1) {
-                    perror("pipe failure");
-                    exit(1);
-            }
-    }
-
-    //**************************************************
     //                  HANDLING CTRL+C
     //**************************************************
     if(signal(SIGINT, interruptSigHandler) == SIG_ERR) {
@@ -63,10 +50,21 @@ int main() {
 
     //while(getchar() != '\n' && getchar() != EOF);
     while(1) {
+	
 
     	printf("Enter recipient node (int): ");
     	scanf("%d", &apple.intendedNode);
 
+	//**************************************************
+        //                PIPING
+        //*************************************************
+	int pipes[k][2];
+    	for (int i = 0; i < k; i++) {
+		if (pipe(pipes[i]) == -1) {
+                    perror("pipe failure");
+                    exit(1);
+            	}
+    	}
     	if (apple.intendedNode < 0 || apple.intendedNode > k){
         	printf("Error: Recipient Node must be between 0 & %d\n", k);
         	exit(1);
@@ -101,6 +99,7 @@ int main() {
 		    read(pipes[prev][0], &apple, sizeof(apple));
 
 		    if (apple.intendedNode == id) {
+			    printf("node %d has the apple", id);
 			    printf("node %d received message %s\n", id, apple.message);
 			    apple.intendedNode = -1; //node set to empty
 			    strcpy(apple.message, "empty");
