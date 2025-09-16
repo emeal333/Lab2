@@ -16,12 +16,37 @@ struct Apple {
     char message[100];
 };
 
+void verboseDataTransferInfo(int prev, int next, const struct Apple *apple){
+    printf(".........................................................................\n");
+    if (apple->intendedNode == -1){
+        printf("Node [%d] has the \033[1;31mapple\033[0m! [%d] is passing empty message to [%d]\n", prev, prev, next);
+    }
+    else{
+        printf("Node [%d] has the \033[1;31mapple\033[0m! [%d] is sending data to node [%d]\n", prev, prev, next);
+    }
+
+}
+
+
+
 //*******************************************
 //           DIAGNOSTIC MESSAGE
 //*******************************************
 
 
 int main() {
+
+    printf("\033[1;31m"); 
+    printf("          .:'\n");
+    printf("      __ :'__\n");
+    printf("   .'`__`-'__``.\n");
+    printf("  :__________.-'\n");
+    printf("  :_________:\n");
+    printf("   :_________`-;\n");
+    printf("jgs `.__.-.__.\n");
+    printf("\033[0m");    
+    printf("ASCII art by Joan G. Stark\n");
+
 
     struct Apple apple;
 
@@ -97,10 +122,11 @@ int main() {
 		    struct Apple apple;
 
 		    read(pipes[prev][0], &apple, sizeof(apple));
-
+            verboseDataTransferInfo(prev, next, &apple);
 		    if (apple.intendedNode == id) {
-			    printf("node %d has the apple", id);
-			    printf("node %d received message %s\n", id, apple.message);
+			    //verboseDataTransferInfo(id, next, &apple);
+                printf(".........................................................................\n");
+                printf("Node [%d] received message [%s]\n", id, apple.message);
 			    apple.intendedNode = -1; //node set to empty
 			    strcpy(apple.message, "empty");
 		    }
