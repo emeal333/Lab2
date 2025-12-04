@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <semaphore.h>
 #include <string.h>
+#include <time.h>
 
 // #define PERMIT_COUNT 2
 
@@ -15,34 +16,74 @@ typedef struct {
     sem_t egg, milk, butter;
 } Kitchen;
 
-// initializing the fridge, pantry, and reciptes
-const char* fridge_ingred[] = {"milk", "eggs", "butter"};
-const char* pantry_ingred[] = {"flour", "sugar", "yeast", "baking soda", "salt", "cinnamon"};
+Kitchen kitchen;
 
-const int fridge_num_items = 3;
-const int pantry_num_items = 6;
+const char* colors[] = {"\033[31m", "\033[32m", "\033[33m", "\033[34m", "\033[35m", "\033[36m"};
 
-const char* cookies_ingred[] = {"flour", "sugar", "milk", "butter"};
-const int cookies_num_items = 4;
-const char* pancakes_ingred[] = {"flour", "sugar", "baking soda", "salt", "egg", "milk", "butter"};
-const int pancakes_num_items = 7;
-const char* pizza_ingred[] = {"yeast", "sugar", "salt"};
-const int pizza_num_items = 3;
-const char* pretzels_ingred[] = {"flour", "sugar", "salt", "yeast", "baking soda", "egg"};
-const int pretzels_num_items = 6;
-const char* rolls_ingred[] = {"flour", "sugar", "salt", "butter", "eggs", "cinnamon"};
-
-// baker struct - OO goes crazy
+// baker struct 
 typedef struct {
 	char name[16];
     int color;
+    int ramsied;
+
 	int flour, sugar, yeast, baking_soda, salt, cinnamon;
     int egg, milk, butter;
+
+    //recipes completed
     int cookies_baked, pancakes_baked, pizza_baked, pretzels_baked, rolls_baked;
 
 } Baker;
 
-Kitchen kitchen;
+int check_ramsied(Baked* baker) {
+    if (baker->ramsied && (rand() % 100 < 15)) {
+        printf("%s%s: RAMSIED! Dropping everything!\033[0m\n", colors[baker->color], baker->name)
+        if (baker->flour) sem_post(&kitchen.flour);
+        if (baker->sugar) sem_post(&kitchen.sugar);
+        if (baker->yeast) sem_post(&kitchen.yeast);
+        if (baker->baking_soda) sem_post(&kitchen.baking_soda);
+        if (baker->salt) sem_post(&kitchen.salt);
+        if (baker->cinnamon) sem_post(&kitchen.cinnamon);
+        if (baker->egg) sem_post(&kitchen.egg);
+        if (baker->milk) sem_post(&kitchen.milk);
+        if (baker->butter) sem_post(&kitchen.butter);
+
+        baker->flour = 0;
+        baker->sugar = 0;
+        baker->yeast = 0; 
+        baker->baking_soda = 0;
+        baker->salt = 0; 
+        baker->cinnamon = 0; 
+        baker->egg = 0; 
+        baker->milk = 0; 
+        baker->butter = 0;
+
+        printf("%s%s: Starting over...\033[0m\n", colors[baker->color], baker->name)
+        return 1; //because the Ramsied happened
+    }
+    return 0; //bc no ramsied happened
+    
+}
+
+// // initializing the fridge, pantry, and reciptes
+// const char* fridge_ingred[] = {"milk", "eggs", "butter"};
+// const char* pantry_ingred[] = {"flour", "sugar", "yeast", "baking soda", "salt", "cinnamon"};
+
+// const int fridge_num_items = 3;
+// const int pantry_num_items = 6;
+
+// const char* cookies_ingred[] = {"flour", "sugar", "milk", "butter"};
+// const int cookies_num_items = 4;
+// const char* pancakes_ingred[] = {"flour", "sugar", "baking soda", "salt", "egg", "milk", "butter"};
+// const int pancakes_num_items = 7;
+// const char* pizza_ingred[] = {"yeast", "sugar", "salt"};
+// const int pizza_num_items = 3;
+// const char* pretzels_ingred[] = {"flour", "sugar", "salt", "yeast", "baking soda", "egg"};
+// const int pretzels_num_items = 6;
+// const char* rolls_ingred[] = {"flour", "sugar", "salt", "butter", "eggs", "cinnamon"};
+
+
+
+
 
 void bake(Baker* baker){
     if (!baker->cookies_baked && baker->flour && baker->sugar && baker->milk && baker->butter) {
@@ -208,6 +249,11 @@ void* thread_callback(void *arg) {
 	//char* thread_name = (char*)arg;
 	Baker* baker = (Baker*)arg; 
 
+    printf("%s%s: The baking competition is beginning!\033[0m\n", colors[baker->color], baker->name); 
+
+
+
+
 	// fridge cs begins
 	sem_wait(&kitchen.fridge);
 	printf("%s is in the fridge\n", baker->name);
@@ -279,7 +325,6 @@ int main() {
 	//char** names = malloc(sizeof(char*) * n);
 	
 	Baker* bakers = malloc(sizeof(Baker) * n);
-    const char* colors[] = {"\033[31m", "\033[32m", "\033[33m", "\033[34m", "\033[35m", "\033[36m"};
 
     sem_init(&kitchen.mixer, 0, 2);  //last input value is how many of that resource there is
     sem_init(&kitchen.pantry, 0, 1);
@@ -329,6 +374,21 @@ int main() {
 
 	sem_destroy(&kitchen.fridge);
 	sem_destroy(&kitchen.pantry);
+    sem_destroy(&kitchen.mixer);
+    sem_destroy(&kitchen.pantry);
+    sem_destroy(&kitchen.fridge);
+    sem_destroy(&kitchen.bowl);
+    sem_destroy(&kitchen.spoon);
+    sem_destroy(&kitchen.oven);
+    sem_destroy(&kitchen.flour);
+    sem_destroy(&kitchen.sugar);
+    sem_destroy(&kitchen.yeast);
+    sem_destroy(&kitchen.baking_soda);
+    sem_destroy(&kitchen.salt);
+    sem_destroy(&kitchen.cinnamon);
+    sem_destroy(&kitchen.egg);
+    sem_destroy(&kitchen.milk);
+    sem_destroy(&kitchen.butter);
 
 	return 0;
 }
