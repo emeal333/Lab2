@@ -67,7 +67,7 @@ int check_ramsied(Baker* baker) {
 }
 
 // initializing the fridge, pantry, and reciptes
-const char* fridge_ingred[] = {"milk", "eggs", "butter"};
+const char* fridge_ingred[] = {"milk", "egg", "butter"};
 const char* pantry_ingred[] = {"flour", "sugar", "yeast", "baking soda", "salt", "cinnamon"};
 
 const int fridge_num_items = 3;
@@ -81,7 +81,8 @@ const char* pizza_ingred[] = {"yeast", "sugar", "salt"};
 const int pizza_num_items = 3;
 const char* pretzels_ingred[] = {"flour", "sugar", "salt", "yeast", "baking soda", "egg"};
 const int pretzels_num_items = 6;
-const char* rolls_ingred[] = {"flour", "sugar", "salt", "butter", "eggs", "cinnamon"};
+const char* rolls_ingred[] = {"flour", "sugar", "salt", "butter", "egg", "cinnamon"};
+const int rolls_num_items = 6;
 
 
 // int[] ingredient_check(Baker* baker)
@@ -263,7 +264,7 @@ void grab_ingredients(Baker* baker, char* recipe){
                 else if (baker->butter == 0){
                     sem_wait(&kitchen.fridge);
                     printf("%s is in the fridge\n", baker->name);
-                    baker->buter++;
+                    baker->butter++;
                     printf("%s took butter from fridge\n", baker->name);
                 }
                 printf("%s exiting the fridge\n", baker->name);
@@ -279,7 +280,7 @@ void grab_ingredients(Baker* baker, char* recipe){
                     baker->flour++;
                     printf("%s took flour from pantry\n", baker->name);
                 }
-                elif (baker->sugar == 0){
+                else if (baker->sugar == 0){
                     sem_wait(&kitchen.pantry);
                     printf("%s is in the pantry\n", baker->name);
                     baker->sugar++;
@@ -312,13 +313,13 @@ void grab_ingredients(Baker* baker, char* recipe){
                     baker->milk++;
                     printf("%s took milk from fridge\n", baker->name);
                 }
-                elif (baker->butter == 0){
+                else if (baker->butter == 0){
                     sem_wait(&kitchen.fridge);
                     printf("%s is in the fridge\n", baker->name);
-                    baker->buter++;
+                    baker->butter++;
                     printf("%s took butter from fridge\n", baker->name);
                 }
-                elif (baker->egg == 0){
+                else if (baker->egg == 0){
                     sem_wait(&kitchen.fridge);
                     printf("%s is in the fridge\n", baker->name);
                     baker->egg++;
@@ -337,19 +338,19 @@ void grab_ingredients(Baker* baker, char* recipe){
                     baker->flour++;
                     printf("%s took flour from pantry\n", baker->name);
                 }
-                elif (baker->sugar == 0){
+                else if (baker->sugar == 0){
                     sem_wait(&kitchen.pantry);
                     printf("%s is in the pantry\n", baker->name);
                     baker->sugar++;
                     printf("%s took sugar from pantry\n", baker->name);
                 }
-                elif (baker->baking_soda == 0){
+                else if (baker->baking_soda == 0){
                     sem_wait(&kitchen.pantry);
                     printf("%s is in the pantry\n", baker->name);
                     baker->baking_soda++;
                     printf("%s took baking_soda from pantry\n", baker->name);
                 }
-                elif (baker->salt == 0){
+                else if (baker->salt == 0){
                     sem_wait(&kitchen.pantry);
                     printf("%s is in the pantry\n", baker->name);
                     baker->salt++;
@@ -383,13 +384,13 @@ void grab_ingredients(Baker* baker, char* recipe){
                     baker->yeast++;
                     printf("%s took yeast from pantry\n", baker->name);
                 }
-                elif (baker->sugar == 0){
+                else if (baker->sugar == 0){
                     sem_wait(&kitchen.pantry);
                     printf("%s is in the pantry\n", baker->name);
                     baker->sugar++;
                     printf("%s took sugar from pantry\n", baker->name);
                 }
-                elif (baker->salt == 0){
+                else if (baker->salt == 0){
                     sem_wait(&kitchen.pantry);
                     printf("%s is in the pantry\n", baker->name);
                     baker->salt++;
@@ -432,25 +433,25 @@ void grab_ingredients(Baker* baker, char* recipe){
                     baker->flour++;
                     printf("%s took flour from pantry\n", baker->name);
                 }
-                elif (baker->sugar == 0){
+                else if (baker->sugar == 0){
                     sem_wait(&kitchen.pantry);
                     printf("%s is in the pantry\n", baker->name);
                     baker->sugar++;
                     printf("%s took sugar from pantry\n", baker->name);
                 }
-                elif (baker->baking_soda == 0){
+                else if (baker->baking_soda == 0){
                     sem_wait(&kitchen.pantry);
                     printf("%s is in the pantry\n", baker->name);
                     baker->baking_soda++;
                     printf("%s took baking soda from pantry\n", baker->name);
                 }
-                elif (baker->salt == 0){
+                else if (baker->salt == 0){
                     sem_wait(&kitchen.pantry);
                     printf("%s is in the pantry\n", baker->name);
                     baker->salt++;
                     printf("%s took salt from pantry\n", baker->name);
                 }
-                elif (baker->yeast == 0){
+                else if (baker->yeast == 0){
                     sem_wait(&kitchen.pantry);
                     printf("%s is in the pantry\n", baker->name);
                     baker->yeast++;
@@ -469,7 +470,7 @@ void grab_ingredients(Baker* baker, char* recipe){
                  baker->flour > 0 &&
                  baker->butter > 0 &&
                  baker->sugar > 0){
-                baker->pretzels_ingred_taken[j] = 1;
+                baker->pretzels_ingred_taken = 1;
             }
         }
 
@@ -484,7 +485,7 @@ void grab_ingredients(Baker* baker, char* recipe){
                     baker->egg++;
                     printf("%s took an egg from fridge\n", baker->name);
                 }
-                elif(baker->butter == 0){
+                else if(baker->butter == 0){
                     sem_wait(&kitchen.fridge);
                     printf("%s is in the fridge\n", baker->name);
                     baker->butter++;
@@ -502,19 +503,19 @@ void grab_ingredients(Baker* baker, char* recipe){
                     baker->flour++;
                     printf("%s took flour from pantry\n", baker->name);
                 }
-                elif (baker->sugar == 0){
+                else if (baker->sugar == 0){
                     sem_wait(&kitchen.pantry);
                     printf("%s is in the pantry\n", baker->name);
                     baker->sugar++;
                     printf("%s took sugar from pantry\n", baker->name);
                 }
-                elif (baker->salt == 0){
+                else if (baker->salt == 0){
                     sem_wait(&kitchen.pantry);
                     printf("%s is in the pantry\n", baker->name);
                     baker->salt++;
                     printf("%s took salt from pantry\n", baker->name);
                 }
-                elif (baker->cinnamon == 0){
+                else if (baker->cinnamon == 0){
                     sem_wait(&kitchen.pantry);
                     printf("%s is in the pantry\n", baker->name);
                     baker->cinnamon++;
@@ -530,85 +531,24 @@ void grab_ingredients(Baker* baker, char* recipe){
                  baker->sugar > 0 && 
                  baker->salt > 0 &&
                  baker->butter > 0 && 
-                 baker->eggs > 0 &&
+                 baker->egg > 0 &&
                  baker->cinnamon > 0){
-                baker->rolls_ingred_taken[j] = 1;
+                baker->rolls_ingred_taken = 1;
             }
         }
     }
 }
 
 
+char* recipe_order(Baker* baker){
     
+}
 	
-
-
-
-
 
 void* thread_callback(void *arg) {
 	//char* thread_name = (char*)arg;
 	Baker* baker = (Baker*)arg; 
-
-    printf("%s%s: The baking competition is beginning!\033[0m\n", colors[baker->color], baker->name); 
-
-
-
-
-	// fridge cs begins
-	sem_wait(&kitchen.fridge);
-	printf("%s is in the fridge\n", baker->name);
-
-	//check if baker has items for recipes
-    const char* cookies_ingred[] = {"flour", "sugar", "milk", "butter"};
-    const int cookies_num_items = 4;
-    const char* pancakes_ingred[] = {"flour", "sugar", "baking soda", "salt", "egg", "milk", "butter"};
-    const int pancakes_num_items = 7;
-    const char* pizza_ingred[] = {"yeast", "sugar", "salt"};
-    const int pizza_num_items = 3;
-    const char* pretzels_ingred[] = {"flour", "sugar", "salt", "yeast", "baking soda", "egg"};
-    const int pretzels_num_items = 6;
-    const char* rolls_ingred[] = {"flour", "sugar", "salt", "butter", "eggs", "cinnamon"};
-    const int rolls_num_items = 6;
-
-
-    while (baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked != 5){
-        char* recipe_order[] = {}; //GENERATE A RANDOM ORDER OF RECIPES
-        // Ex: "cookies, pancakes, pretzels, pizza, rolls"
-
-        if recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "cookies"{
-            
-        }
-        elif recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "pancakes"{
-
-        }
-        elif recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "pizza"{
-            
-        }
-        elif recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "rolls"{
-
-        }
-        elif recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "pretzels"{
-
-        }
-
-    }
-
 	
-
-	int complete = 1;
-
-	for (int j = 0; j < cookies_num_items; j++) {
-		if (baker->cookies_ingred_taken[j] == 0) {
-			complete = 0;
-			break;
-		}
-	}
-	if (complete) {
-		printf("%s is ready to mix cookies\n", baker->name);
-	}
-
-        return NULL;
 }
 
 
@@ -665,6 +605,34 @@ int main() {
 	for (int i = 0; i < n; i++) {
 		pthread_join(threads[i], NULL);
 	}
+
+    printf("%s%s: The baking competition is beginning!\033[0m\n", colors[baker->color], baker->name); 
+
+
+    while (baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked != 5){
+        char* recipe_order[] = {}; //GENERATE A RANDOM ORDER OF RECIPES
+        // Ex: "cookies, pancakes, pretzels, pizza, rolls"
+
+        if recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "cookies"{
+            
+        }
+        else if recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "pancakes"{
+
+        }
+        else if recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "pizza"{
+            
+        }
+        else if recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "rolls"{
+
+        }
+        else if recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "pretzels"{
+
+        }
+
+    }
+
+
+
 	
 	
 	free(threads);
