@@ -292,8 +292,11 @@ void grab_ingredients(Baker* baker, char* recipe){
                 printf("%s exited the pantry\n", baker->name);
             }
 
-            if (baker->milk + baker->flour + baker->butter + baker->sugar == 4){
-                baker->cookies_ingred_taken[j] = 1;
+            if (baker->milk > 0 &&
+                baker->flour > 0 &&
+                baker->butter > 0 &&
+                baker->sugar > 0){
+                baker->cookies_ingred_taken = 1;
             }
 
         }
@@ -316,6 +319,12 @@ void grab_ingredients(Baker* baker, char* recipe){
                     baker->buter++;
                     printf("%s took butter from fridge\n", baker->name);
                 }
+                elif (baker->egg == 0){
+                    sem_wait(&kitchen.fridge);
+                    printf("%s is in the fridge\n", baker->name);
+                    baker->egg++;
+                    printf("%s took an egg from fridge\n", baker->name);
+                }
                 printf("%s exiting the fridge\n", baker->name);
                 sem_post(&kitchen.fridge); 
                 // fridge cs ends
@@ -335,25 +344,198 @@ void grab_ingredients(Baker* baker, char* recipe){
                     baker->sugar++;
                     printf("%s took sugar from pantry\n", baker->name);
                 }
+                elif (baker->baking_soda == 0){
+                    sem_wait(&kitchen.pantry);
+                    printf("%s is in the pantry\n", baker->name);
+                    baker->baking_soda++;
+                    printf("%s took baking_soda from pantry\n", baker->name);
+                }
+                elif (baker->salt == 0){
+                    sem_wait(&kitchen.pantry);
+                    printf("%s is in the pantry\n", baker->name);
+                    baker->salt++;
+                    printf("%s took salt from pantry\n", baker->name);
+                }
                 printf("%s exiting the pantry\n", baker->name);
                 sem_post(&kitchen.pantry); 
                 // fridge cs ends
                 printf("%s exited the pantry\n", baker->name);
             }
 
-            if (baker->milk + baker->flour + baker->butter + baker->sugar == 4){
-                baker->pancake_ingred_taken[j] = 1;
+            if (baker->egg > 0 &&
+                 baker->baking_soda > 0 &&
+                  baker->salt > 0 &&
+                  baker->milk > 0 &&
+                  baker->flour > 0 &&
+                  baker->butter > 0 &&
+                  baker->sugar > 0){
+                baker->pancake_ingred_taken = 1;
             }
         }
     }
     if (recipe == "pizza") {
+        //check for pizza items
+		for (int j = 0; j < pizza_num_items; j++) {
+
+            if (strcmp(pizza_ingred[i], pizza_ingred[j]) == 0 && baker->pizza_ingred_taken[j] == 0) {
+                if (baker->yeast == 0){
+                    sem_wait(&kitchen.pantry);
+                    printf("%s is in the pantry\n", baker->name);
+                    baker->yeast++;
+                    printf("%s took yeast from pantry\n", baker->name);
+                }
+                elif (baker->sugar == 0){
+                    sem_wait(&kitchen.pantry);
+                    printf("%s is in the pantry\n", baker->name);
+                    baker->sugar++;
+                    printf("%s took sugar from pantry\n", baker->name);
+                }
+                elif (baker->salt == 0){
+                    sem_wait(&kitchen.pantry);
+                    printf("%s is in the pantry\n", baker->name);
+                    baker->salt++;
+                    printf("%s took salt from pantry\n", baker->name);
+                }
+                printf("%s exiting the pantry\n", baker->name);
+                sem_post(&kitchen.pantry); 
+                // fridge cs ends
+                printf("%s exited the pantry\n", baker->name);
+            }
+
+            if ( baker->salt > 0 &&
+                 baker->yeast > 0 &&
+                  baker->sugar > 0){
+                baker->pizza_ingred_taken = 1;
+            }
+        }
 
     }
     if (recipe == "pretzels") {
+         //check for pretzel items
+		for (int j = 0; j < pretzels_num_items; j++) {
+			if (strcmp(fridge_ingred[i], pretzels_ingred[j]) == 0 && baker->pretzels_ingred_taken[j] == 0) {
+                if (baker->egg == 0){
+                    sem_wait(&kitchen.fridge);
+                    printf("%s is in the fridge\n", baker->name);
+                    baker->egg++;
+                    printf("%s took an egg from fridge\n", baker->name);
+                }
+                printf("%s exiting the fridge\n", baker->name);
+                sem_post(&kitchen.fridge); 
+                // fridge cs ends
+                printf("%s exited the fridge\n", baker->name);
+            }
+
+            if (strcmp(pantry_ingred[i], pretzels_ingred[j]) == 0 && baker->pretzels_ingred_taken[j] == 0) {
+                if (baker->flour == 0){
+                    sem_wait(&kitchen.pantry);
+                    printf("%s is in the pantry\n", baker->name);
+                    baker->flour++;
+                    printf("%s took flour from pantry\n", baker->name);
+                }
+                elif (baker->sugar == 0){
+                    sem_wait(&kitchen.pantry);
+                    printf("%s is in the pantry\n", baker->name);
+                    baker->sugar++;
+                    printf("%s took sugar from pantry\n", baker->name);
+                }
+                elif (baker->baking_soda == 0){
+                    sem_wait(&kitchen.pantry);
+                    printf("%s is in the pantry\n", baker->name);
+                    baker->baking_soda++;
+                    printf("%s took baking soda from pantry\n", baker->name);
+                }
+                elif (baker->salt == 0){
+                    sem_wait(&kitchen.pantry);
+                    printf("%s is in the pantry\n", baker->name);
+                    baker->salt++;
+                    printf("%s took salt from pantry\n", baker->name);
+                }
+                elif (baker->yeast == 0){
+                    sem_wait(&kitchen.pantry);
+                    printf("%s is in the pantry\n", baker->name);
+                    baker->yeast++;
+                    printf("%s took yeast from pantry\n", baker->name);
+                }
+                printf("%s exiting the pantry\n", baker->name);
+                sem_post(&kitchen.pantry); 
+                // fridge cs ends
+                printf("%s exited the pantry\n", baker->name);
+            }
+
+            if (baker->egg  > 0 &&
+                 baker->baking_soda > 0 && 
+                 baker->salt > 0 &&
+                 baker->yeast > 0 && 
+                 baker->flour > 0 &&
+                 baker->butter > 0 &&
+                 baker->sugar > 0){
+                baker->pretzels_ingred_taken[j] = 1;
+            }
+        }
 
     }
     if (recipe == "rolls") {
+        //check for cinnamon roll items
+		for (int j = 0; j < rolls_num_items; j++) {
+			if (strcmp(fridge_ingred[i], rolls_ingred[j]) == 0 && baker->rolls_ingred_taken[j] == 0) {
+                if (baker->egg == 0){
+                    sem_wait(&kitchen.fridge);
+                    printf("%s is in the fridge\n", baker->name);
+                    baker->egg++;
+                    printf("%s took an egg from fridge\n", baker->name);
+                }
+                elif(baker->butter == 0){
+                    sem_wait(&kitchen.fridge);
+                    printf("%s is in the fridge\n", baker->name);
+                    baker->butter++;
+                    printf("%s took butter from fridge\n", baker->name);
+                }
+                printf("%s exiting the fridge\n", baker->name);
+                sem_post(&kitchen.fridge); 
+                // fridge cs ends
+                printf("%s exited the fridge\n", baker->name);
+            }
+            if (strcmp(pantry_ingred[i], rolls_ingred[j]) == 0 && baker->rolls_ingred_taken[j] == 0) {
+                if (baker->flour == 0){
+                    sem_wait(&kitchen.pantry);
+                    printf("%s is in the pantry\n", baker->name);
+                    baker->flour++;
+                    printf("%s took flour from pantry\n", baker->name);
+                }
+                elif (baker->sugar == 0){
+                    sem_wait(&kitchen.pantry);
+                    printf("%s is in the pantry\n", baker->name);
+                    baker->sugar++;
+                    printf("%s took sugar from pantry\n", baker->name);
+                }
+                elif (baker->salt == 0){
+                    sem_wait(&kitchen.pantry);
+                    printf("%s is in the pantry\n", baker->name);
+                    baker->salt++;
+                    printf("%s took salt from pantry\n", baker->name);
+                }
+                elif (baker->cinnamon == 0){
+                    sem_wait(&kitchen.pantry);
+                    printf("%s is in the pantry\n", baker->name);
+                    baker->cinnamon++;
+                    printf("%s took cinnamon from pantry\n", baker->name);
+                }
+                printf("%s exiting the pantry\n", baker->name);
+                sem_post(&kitchen.pantry); 
+                // fridge cs ends
+                printf("%s exited the pantry\n", baker->name);
+            }
 
+            if (baker->flour  > 0 &&
+                 baker->sugar > 0 && 
+                 baker->salt > 0 &&
+                 baker->butter > 0 && 
+                 baker->eggs > 0 &&
+                 baker->cinnamon > 0){
+                baker->rolls_ingred_taken[j] = 1;
+            }
+        }
     }
 }
 
@@ -388,6 +570,7 @@ void* thread_callback(void *arg) {
     const char* pretzels_ingred[] = {"flour", "sugar", "salt", "yeast", "baking soda", "egg"};
     const int pretzels_num_items = 6;
     const char* rolls_ingred[] = {"flour", "sugar", "salt", "butter", "eggs", "cinnamon"};
+    const int rolls_num_items = 6;
 
 
     while (baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked != 5){
