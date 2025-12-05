@@ -7,7 +7,8 @@
 #include <string.h>
 #include <time.h>
 
-// #define PERMIT_COUNT 2
+int rams_happened = 0;
+pthread_mutex_t rams_lock = PTHREAD_MUTEX_INITIALIZER;
 
 //equipment & ingredients are stored in our kitchen!
 typedef struct {
@@ -37,7 +38,18 @@ typedef struct {
 } Baker;
 
 int check_ramsied(Baker* baker) {
+	pthread_mutex_lock(&rams_lock);
+
+	//only one ramsied event happen to one baker
+	if (rams_happened) {
+		pthread_mutex_unlock(&rams_lock);
+		return 0;
+	}
+
     if (baker->ramsied && (rand() % 100 < 15)) {
+	    rams_happened = 1;
+	    pthread_mutex_unlock(&rams_lock);
+
         printf("%s%s: RAMSIED! Dropping everything!\033[0m\n", colors[baker->color], baker->name);
         if (baker->flour) sem_post(&kitchen.flour);
         if (baker->sugar) sem_post(&kitchen.sugar);
@@ -62,6 +74,8 @@ int check_ramsied(Baker* baker) {
         printf("%s%s: Starting over...\033[0m\n", colors[baker->color], baker->name);
         return 1; //because the Ramsied happened
     }
+    pthread_mutex_unlock(&rams_lock);
+
     return 0; //bc no ramsied happened
     
 }
@@ -91,6 +105,7 @@ const int rolls_num_items = 6;
 void bake(Baker* baker) {
 
     if (!baker->cookies_baked && baker->flour && baker->sugar && baker->milk && baker->butter) {
+	    if (check_ramsied(baker)) return;
         printf("%s%s: I have all of the ingredients for COOKIES! Starting COOKIES now! \033[0m\n", colors[baker->color], baker->name);
 
         sem_wait(&kitchen.bowl);
@@ -121,6 +136,7 @@ void bake(Baker* baker) {
     }
 
     if (!baker->pancakes_baked && baker->flour && baker->sugar && baker->baking_soda && baker->salt && baker->egg && baker->milk && baker->butter) {
+	    if (check_ramsied(baker)) return;
         printf("%s%s: I have all of the ingredients for PANCAKES! Starting PANCAKES now! \033[0m\n", colors[baker->color], baker->name);
 
         sem_wait(&kitchen.bowl);
@@ -154,6 +170,7 @@ void bake(Baker* baker) {
     }
 
     if (!baker->pizza_baked && baker->yeast && baker->sugar && baker->salt) {
+	    if (check_ramsied(baker)) return;
         printf("%s%s: I have all of the ingredients for HOMEMADE PIZZA DOUGH! Starting PIZZA DOUGH now! \033[0m\n", colors[baker->color], baker->name);
 
         sem_wait(&kitchen.bowl);
@@ -183,6 +200,7 @@ void bake(Baker* baker) {
     }
 
     if (!baker->pretzels_baked && baker->yeast && baker->sugar && baker->salt && baker->flour && baker->baking_soda && baker->egg) {
+	    if (check_ramsied(baker)) return;
         printf("%s%s: I have all of the ingredients for SOFT PRETZELS! Starting PRETZELS now! \033[0m\n", colors[baker->color], baker->name);
 
         sem_wait(&kitchen.bowl);
@@ -215,6 +233,7 @@ void bake(Baker* baker) {
     }
 
     if (!baker->rolls_baked && baker->yeast && baker->sugar && baker->salt && baker->flour && baker->butter && baker->egg && baker->cinnamon) {
+	    if (check_ramsied(baker)) return;
         printf("%s%s: I have all of the ingredients for CINNAMON ROLLS! Starting CINNAMON ROLLS now! \033[0m\n", colors[baker->color], baker->name);
 
         sem_wait(&kitchen.bowl);
@@ -245,14 +264,11 @@ void bake(Baker* baker) {
         printf("%s%s: CINNAMON ROLLS are done!  %d/5 recipes are complete!\033[0m\n", colors[baker->color], baker->name, baker->cookies_baked + 
             baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked);
     }
-
-    
 }
 
-
-
 void grab_ingredients(Baker* baker, char* recipe){
-    if (strcmp(recipe, "cookies") == 0) {
+    if (check_ramsied(baker)) return;
+	if (strcmp(recipe, "cookies") == 0) {
         //check for cookie items
 		for (int j = 0; j < cookies_num_items; j++) {
 			if ((baker->milk < 1 || baker->butter < 1) && baker->cookies_ingred_taken == 0) {
@@ -547,13 +563,11 @@ void grab_ingredients(Baker* baker, char* recipe){
 
 }
 
-char* recipe_order(Baker* baker){
+/* char* recipe_order(Baker* baker){
     
-}
-	
+}*/	
 
 void* thread_callback(void *arg) {
-	//char* thread_name = (char*)arg;
 	Baker* baker = (Baker*)arg; 
 	
 	while (baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked != 5){
@@ -580,7 +594,6 @@ void* thread_callback(void *arg) {
                 bake(baker);
         }
     }
-
 }
 
 
@@ -592,7 +605,6 @@ int main() {
 	scanf("%d", &n);
 	
 	pthread_t* threads = malloc(sizeof(pthread_t) * n);
-	//char** names = malloc(sizeof(char*) * n);
 	
 	Baker* bakers = malloc(sizeof(Baker) * n);
 
@@ -614,17 +626,16 @@ int main() {
     sem_init(&kitchen.milk, 0, 1);
     sem_init(&kitchen.butter,0, 1);
 
-	//create n threads and bakers(chatGPT helped)
 	for (int i = 0; i < n; i++) {
 		snprintf(bakers[i].name, sizeof(bakers[i].name), "baker%d", i + 1);
-		//memset(bakers[i].cookies_ingred_taken, 0, sizeof(bakers[i].cookies_ingred_taken));
-		//memset(bakers[i].pancakes_ingred_taken, 0, sizeof(bakers[i].pancakes_ingred_taken));
 		
 		bakers[i].cookies_ingred_taken = 0;
 		bakers[i].pancakes_ingred_taken = 0;
 		bakers[i].pretzels_ingred_taken = 0;
 		bakers[i].pizza_ingred_taken = 0;
 		bakers[i].rolls_ingred_taken = 0;
+
+		bakers[i].ramsied = 1;
 
 		if (pthread_create(&threads[i], NULL, thread_callback, &bakers[i]) != 0) {
 			perror("pthread_create");
@@ -647,48 +658,7 @@ int main() {
 	for (int i = 0; i < n; i++) {
 		printf("%s%s: The baking competition is beginning!\033[0m\n", colors[bakers[i].color], bakers[i].name);
 	}	
-
-/*
-    while (baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked != 5){
-        //char* recipe_order[] = {}; //GENERATE A RANDOM ORDER OF RECIPES
-        // Ex: "cookies, pancakes, pretzels, pizza, rolls"
-
-	char* recipe_order[5] = {"cookies", "pancakes", "pretzels", "pizza", "rolls"};
-
-	int index = baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked;
-
-	if (strcmp(recipe_order[index], "cookies") == 0) {
-	} else if (strcmp(recipe_order[index], "pancakes") == 0) {
-	} else if (strcmp(recipe_order[index], "pizza") == 0) {
-	} else if (strcmp(recipe_order[index], "pretzels") == 0) {
-	} else if (strcmp(recipe_order[index], "rolls") == 0) {
-	}
-    }
-*/
-
-
-/*
-        if (recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "cookies"); {
-            
-        } else if (recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "pancakes"); {
-
-        }
-        else if (recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "pizza"); {
-            
-        }
-        else if (recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "rolls"); {
-
-        }
-        else if (recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "pretzels"); {
-
-        }
-
-    }
-*/
-
-
-	
-	
+		
 	free(threads);
 	free(bakers);
 
