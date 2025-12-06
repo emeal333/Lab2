@@ -7,7 +7,10 @@
 #include <string.h>
 #include <time.h>
 
-// #define PERMIT_COUNT 2
+int competition_over = 0;
+int rams_happened = 0;
+pthread_mutex_t rams_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t competition_lock = PTHREAD_MUTEX_INITIALIZER;
 
 //equipment & ingredients are stored in our kitchen!
 typedef struct {
@@ -37,7 +40,18 @@ typedef struct {
 } Baker;
 
 int check_ramsied(Baker* baker) {
+	pthread_mutex_lock(&rams_lock);
+
+	//only one ramsied event happen to one baker
+	if (rams_happened) {
+		pthread_mutex_unlock(&rams_lock);
+		return 0;
+	}
+
     if (baker->ramsied && (rand() % 100 < 15)) {
+	    rams_happened = 1;
+	    pthread_mutex_unlock(&rams_lock);
+
         printf("%s%s: RAMSIED! Dropping everything!\033[0m\n", colors[baker->color], baker->name);
         if (baker->flour) sem_post(&kitchen.flour);
         if (baker->sugar) sem_post(&kitchen.sugar);
@@ -62,6 +76,8 @@ int check_ramsied(Baker* baker) {
         printf("%s%s: Starting over...\033[0m\n", colors[baker->color], baker->name);
         return 1; //because the Ramsied happened
     }
+    pthread_mutex_unlock(&rams_lock);
+
     return 0; //bc no ramsied happened
     
 }
@@ -88,8 +104,10 @@ const int rolls_num_items = 6;
 // int[] ingredient_check(Baker* baker)
 
 
-void bake(Baker* baker){
+void bake(Baker* baker) {
+
     if (!baker->cookies_baked && baker->flour && baker->sugar && baker->milk && baker->butter) {
+	    if (check_ramsied(baker)) return;
         printf("%s%s: I have all of the ingredients for COOKIES! Starting COOKIES now! \033[0m\n", colors[baker->color], baker->name);
 
         sem_wait(&kitchen.bowl);
@@ -120,6 +138,7 @@ void bake(Baker* baker){
     }
 
     if (!baker->pancakes_baked && baker->flour && baker->sugar && baker->baking_soda && baker->salt && baker->egg && baker->milk && baker->butter) {
+	    if (check_ramsied(baker)) return;
         printf("%s%s: I have all of the ingredients for PANCAKES! Starting PANCAKES now! \033[0m\n", colors[baker->color], baker->name);
 
         sem_wait(&kitchen.bowl);
@@ -153,6 +172,7 @@ void bake(Baker* baker){
     }
 
     if (!baker->pizza_baked && baker->yeast && baker->sugar && baker->salt) {
+	    if (check_ramsied(baker)) return;
         printf("%s%s: I have all of the ingredients for HOMEMADE PIZZA DOUGH! Starting PIZZA DOUGH now! \033[0m\n", colors[baker->color], baker->name);
 
         sem_wait(&kitchen.bowl);
@@ -182,6 +202,7 @@ void bake(Baker* baker){
     }
 
     if (!baker->pretzels_baked && baker->yeast && baker->sugar && baker->salt && baker->flour && baker->baking_soda && baker->egg) {
+	    if (check_ramsied(baker)) return;
         printf("%s%s: I have all of the ingredients for SOFT PRETZELS! Starting PRETZELS now! \033[0m\n", colors[baker->color], baker->name);
 
         sem_wait(&kitchen.bowl);
@@ -214,6 +235,7 @@ void bake(Baker* baker){
     }
 
     if (!baker->rolls_baked && baker->yeast && baker->sugar && baker->salt && baker->flour && baker->butter && baker->egg && baker->cinnamon) {
+	    if (check_ramsied(baker)) return;
         printf("%s%s: I have all of the ingredients for CINNAMON ROLLS! Starting CINNAMON ROLLS now! \033[0m\n", colors[baker->color], baker->name);
 
         sem_wait(&kitchen.bowl);
@@ -244,14 +266,11 @@ void bake(Baker* baker){
         printf("%s%s: CINNAMON ROLLS are done!  %d/5 recipes are complete!\033[0m\n", colors[baker->color], baker->name, baker->cookies_baked + 
             baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked);
     }
-
-    
 }
 
-
-
 void grab_ingredients(Baker* baker, char* recipe){
-    if (recipe == "cookies") {
+    if (check_ramsied(baker)) return;
+	if (strcmp(recipe, "cookies") == 0) {
         //check for cookie items
 		for (int j = 0; j < cookies_num_items; j++) {
 			if ((baker->milk < 1 || baker->butter < 1) && baker->cookies_ingred_taken == 0) {
@@ -303,7 +322,7 @@ void grab_ingredients(Baker* baker, char* recipe){
 	}
 	
     
-    if (recipe == "pancakes") {
+    if (strcmp(recipe, "pancakes") == 0) {
         //check for pancake items
 		for (int j = 0; j < pancakes_num_items; j++) {
 			if ((baker->milk < 1 || baker->butter < 1 || baker->egg < 1) && baker->pancakes_ingred_taken == 0) {
@@ -373,7 +392,7 @@ void grab_ingredients(Baker* baker, char* recipe){
             }
         }
     }
-    if (recipe == "pizza") {
+    if (strcmp(recipe, "pizza") == 0) {
         //check for pizza items
 		for (int j = 0; j < pizza_num_items; j++) {
 
@@ -410,16 +429,17 @@ void grab_ingredients(Baker* baker, char* recipe){
         }
 
     }
-    if (recipe == "pretzels") {
+    if (strcmp(recipe, "pretzels") == 0) {
          //check for pretzel items
 		for (int j = 0; j < pretzels_num_items; j++) {
-			if ((baker->egg < 1 ) && baker->pretzels_ingred_taken == 0) {
+			if ((baker->egg < 1) && baker->pretzels_ingred_taken == 0) {
                 if (baker->egg == 0){
                     sem_wait(&kitchen.fridge);
                     printf("%s is in the fridge\n", baker->name);
                     baker->egg++;
                     printf("%s took an egg from fridge\n", baker->name);
-                }
+                } 
+
                 printf("%s exiting the fridge\n", baker->name);
                 sem_post(&kitchen.fridge); 
                 // fridge cs ends
@@ -468,14 +488,13 @@ void grab_ingredients(Baker* baker, char* recipe){
                  baker->salt > 0 &&
                  baker->yeast > 0 && 
                  baker->flour > 0 &&
-                 baker->butter > 0 &&
                  baker->sugar > 0){
                 baker->pretzels_ingred_taken = 1;
             }
         }
 
     }
-    if (recipe == "rolls") {
+    if (strcmp(recipe, "rolls") == 0) {
         //check for cinnamon roll items
 		for (int j = 0; j < rolls_num_items; j++) {
 			if ((baker->egg < 1 || baker->butter < 1) && baker->rolls_ingred_taken == 0) {
@@ -496,7 +515,8 @@ void grab_ingredients(Baker* baker, char* recipe){
                 // fridge cs ends
                 printf("%s exited the fridge\n", baker->name);
             }
-            if ((baker->flour < 1 || baker->sugar < 1 || baker->salt < 1 || baker->cinnamon < 1) && baker->cookies_ingred_taken == 0) {
+            if ((baker->flour < 1 || baker->sugar < 1 || baker->salt < 1 || baker->cinnamon < 1 || baker->yeast < 1) && baker->rolls_ingred_taken == 0) {
+		    
                 if (baker->flour == 0){
                     sem_wait(&kitchen.pantry);
                     printf("%s is in the pantry\n", baker->name);
@@ -520,7 +540,11 @@ void grab_ingredients(Baker* baker, char* recipe){
                     printf("%s is in the pantry\n", baker->name);
                     baker->cinnamon++;
                     printf("%s took cinnamon from pantry\n", baker->name);
-                }
+                } else if (baker->yeast == 0) {
+			baker->yeast++;
+			printf("%s took yeast from pantry\n", baker->name);
+		}
+		
                 printf("%s exiting the pantry\n", baker->name);
                 sem_post(&kitchen.pantry); 
                 // fridge cs ends
@@ -532,23 +556,49 @@ void grab_ingredients(Baker* baker, char* recipe){
                  baker->salt > 0 &&
                  baker->butter > 0 && 
                  baker->egg > 0 &&
-                 baker->cinnamon > 0){
+                 baker->cinnamon > 0 &&
+	         baker->yeast > 0) {
                 baker->rolls_ingred_taken = 1;
             }
         }
     }
+
 }
 
-
-char* recipe_order(Baker* baker){
+/* char* recipe_order(Baker* baker){
     
-}
-	
+}*/	
 
 void* thread_callback(void *arg) {
-	//char* thread_name = (char*)arg;
 	Baker* baker = (Baker*)arg; 
 	
+	while (baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked != 5){
+        //char* recipe_order[] = {}; //GENERATE A RANDOM ORDER OF RECIPES
+        // Ex: "cookies, pancakes, pretzels, pizza, rolls"
+        char* recipe_order[5] = {"cookies", "pancakes", "pretzels", "pizza", "rolls"};
+
+        int index = baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked;
+
+        if (strcmp(recipe_order[index], "cookies") == 0) {
+		grab_ingredients(baker, "cookies");
+		bake(baker);
+        } else if (strcmp(recipe_order[index], "pancakes") == 0) {
+		grab_ingredients(baker, "pancakes");
+                bake(baker);
+        } else if (strcmp(recipe_order[index], "pizza") == 0) {
+		grab_ingredients(baker, "pizza");
+                bake(baker);
+        } else if (strcmp(recipe_order[index], "pretzels") == 0) {
+		grab_ingredients(baker, "pretzels");
+                bake(baker);
+	} else if (strcmp(recipe_order[index], "rolls") == 0) {
+		grab_ingredients(baker, "rolls");
+                bake(baker);
+        }
+       
+        usleep(10000);
+    }
+    return NULL;
 }
 
 
@@ -560,7 +610,6 @@ int main() {
 	scanf("%d", &n);
 	
 	pthread_t* threads = malloc(sizeof(pthread_t) * n);
-	//char** names = malloc(sizeof(char*) * n);
 	
 	Baker* bakers = malloc(sizeof(Baker) * n);
 
@@ -582,12 +631,18 @@ int main() {
     sem_init(&kitchen.milk, 0, 1);
     sem_init(&kitchen.butter,0, 1);
 
-	//create n threads and bakers(chatGPT helped)
 	for (int i = 0; i < n; i++) {
 		snprintf(bakers[i].name, sizeof(bakers[i].name), "baker%d", i + 1);
-		memset(bakers[i].cookies_ingred_taken, 0, sizeof(bakers[i].cookies_ingred_taken));
-		memset(bakers[i].pancakes_ingred_taken, 0, sizeof(bakers[i].pancakes_ingred_taken));
+        bakers[i].color = i % 6;
 		
+		bakers[i].cookies_ingred_taken = 0;
+		bakers[i].pancakes_ingred_taken = 0;
+		bakers[i].pretzels_ingred_taken = 0;
+		bakers[i].pizza_ingred_taken = 0;
+		bakers[i].rolls_ingred_taken = 0;
+
+		bakers[i].ramsied = 1;
+
 		if (pthread_create(&threads[i], NULL, thread_callback, &bakers[i]) != 0) {
 			perror("pthread_create");
 			// join previously created threads, cleanup
@@ -606,35 +661,10 @@ int main() {
 		pthread_join(threads[i], NULL);
 	}
 
-    printf("%s%s: The baking competition is beginning!\033[0m\n", colors[baker->color], baker->name); 
-
-
-    while (baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked != 5){
-        char* recipe_order[] = {}; //GENERATE A RANDOM ORDER OF RECIPES
-        // Ex: "cookies, pancakes, pretzels, pizza, rolls"
-
-        if recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "cookies"{
-            
-        }
-        else if recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "pancakes"{
-
-        }
-        else if recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "pizza"{
-            
-        }
-        else if recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "rolls"{
-
-        }
-        else if recipe_order[baker->cookies_baked + baker->pancakes_baked + baker->pizza_baked + baker->pretzels_baked + baker->rolls_baked] == "pretzels"{
-
-        }
-
-    }
-
-
-
-	
-	
+	// for (int i = 0; i < n; i++) {
+	// 	printf("%s%s: The baking competition is beginning!\033[0m\n", colors[bakers[i].color], bakers[i].name);
+	// }	
+		
 	free(threads);
 	free(bakers);
 
